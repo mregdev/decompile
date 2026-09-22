@@ -4,7 +4,7 @@ Bu depo, ilk DWTFD uygulamasının decompile edilmiş kaynaklarını ve yeniden 
 
 ## Yeni sürüm
 
-[WPF uygulaması](modern/DWTFD.Modern/) .NET 10 ile geliştirilmiştir. Geçici dosyaları tarayıp temizler; Windows'un son açılanlar listesini de sıfırlayabilir. Dört alan açılışta seçilidir. Temizlikten önce tarama sonucu gösterilir ve silme işlemi ayrıca onay ister.
+[WPF uygulaması](modern/DWTFD.Modern/) .NET 10 ile geliştirilmiştir. Geçici dosyaları tarayıp temizler; Windows'un son açılanlar listesini de sıfırlayabilir. Dört alan açılışta seçilidir. Temizle düğmesi tarama sonucunu ve boyutu 1,5 saniye gösterip işlemi başlatır.
 
 Windows üzerinde derlemek için:
 

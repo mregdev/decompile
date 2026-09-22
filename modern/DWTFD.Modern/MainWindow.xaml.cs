@@ -5,7 +5,6 @@ namespace DWTFD.Modern;
 
 public partial class MainWindow : Window
 {
-    private ScanResult? _scan;
     private CancellationTokenSource? _operation;
     private bool _busy;
 
@@ -26,80 +25,49 @@ public partial class MainWindow : Window
     private void SelectionChanged(object sender, RoutedEventArgs e)
     {
         if (StatusText is null || _busy) return;
-        _scan = null;
         SizeLabel.Text = "TARANAN ALAN";
         FileLabel.Text = "BULUNAN DOSYA";
         SizeValue.Text = FileValue.Text = SkippedValue.Text = "—";
-        CleanButton.IsEnabled = false;
+        CleanButton.IsEnabled = SelectedAreas() != CleanupArea.None;
         StatusText.Text = "Seçim hazır";
-        DetailText.Text = "Güncel sonuçları görmek için tara.";
+        DetailText.Text = "Temizle ile tarama ve temizlik başlar.";
         DetailText.ToolTip = null;
     }
 
-    private async void ScanButton_Click(object sender, RoutedEventArgs e)
+    private async void CleanButton_Click(object sender, RoutedEventArgs e)
     {
         var areas = SelectedAreas();
         if (areas == CleanupArea.None)
         {
             StatusText.Text = "Alan seçilmedi";
-            DetailText.Text = "Taramak istediğin en az bir alanı seç.";
+            DetailText.Text = "Temizlemek istediğin en az bir alanı seç.";
             return;
         }
 
         SetBusy(true, "Taranıyor…", "Seçilen klasörler inceleniyor.");
         try
         {
-            _scan = await Task.Run(() => CleanupService.Scan(areas, _operation!.Token));
+            var scan = await Task.Run(() => CleanupService.Scan(areas, _operation!.Token));
             SizeLabel.Text = "TARANAN ALAN";
             FileLabel.Text = "BULUNAN DOSYA";
-            SizeValue.Text = FormatBytes(_scan.Bytes);
-            FileValue.Text = _scan.Files.Count.ToString("N0", CultureInfo.GetCultureInfo("tr-TR"));
-            SkippedValue.Text = _scan.Skipped.ToString("N0", CultureInfo.GetCultureInfo("tr-TR"));
-            StatusText.Text = "Tarama tamamlandı";
-            DetailText.Text = _scan.Skipped > 0
-                ? $"{_scan.Skipped} öğeye erişilemedi. Ayrıntılar için bu metnin üzerine gel."
-                : areas == CleanupArea.Recent ? "Son açılanlar listesi temizlenmeye hazır." : "Sonuçları gözden geçirip temizliği başlatabilirsin.";
-            DetailText.ToolTip = _scan.Errors.Count > 0 ? string.Join(Environment.NewLine, _scan.Errors) : null;
-        }
-        catch (OperationCanceledException)
-        {
-            _scan = null;
-            StatusText.Text = "Tarama iptal edildi";
-            DetailText.Text = "İstersen yeniden tarayabilirsin.";
-        }
-        catch (Exception ex)
-        {
-            _scan = null;
-            StatusText.Text = "Tarama başarısız";
-            DetailText.Text = ex.Message;
-        }
-        finally
-        {
-            SetBusy(false);
-        }
-    }
+            SizeValue.Text = FormatBytes(scan.Bytes);
+            FileValue.Text = scan.Files.Count.ToString("N0", CultureInfo.GetCultureInfo("tr-TR"));
+            SkippedValue.Text = scan.Skipped.ToString("N0", CultureInfo.GetCultureInfo("tr-TR"));
+            StatusText.Text = $"{scan.Files.Count:N0} dosya bulundu";
+            DetailText.Text = $"{FormatBytes(scan.Bytes)} · 1,5 saniye sonra temizlenecek.";
+            DetailText.ToolTip = scan.Errors.Count > 0 ? string.Join(Environment.NewLine, scan.Errors) : null;
 
-    private async void CleanButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_scan is null || _scan.Areas != SelectedAreas()) return;
-        var scan = _scan;
-        var summary = scan.Areas.HasFlag(CleanupArea.Recent)
-            ? "Son açılanlar listesi de sıfırlanacak.\n" : string.Empty;
-        var answer = MessageBox.Show(
-            $"{scan.Files.Count:N0} dosya ve {scan.Directories.Count:N0} klasör temizlenecek.\n{summary}Bu işlem geri alınamaz. Devam edilsin mi?",
-            "Temizliği onayla", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
-        if (answer != MessageBoxResult.Yes) return;
+            await Task.Delay(1500, _operation!.Token);
 
-        SetBusy(true, "Temizleniyor…", "Kullanımdaki veya erişilemeyen öğeler atlanır.");
-        WorkProgress.IsIndeterminate = false;
-        WorkProgress.Minimum = 0;
-        WorkProgress.Maximum = Math.Max(1, scan.Files.Count + scan.Directories.Count);
-        WorkProgress.Value = 0;
-        var progress = new Progress<int>(value => WorkProgress.Value = value);
-
-        try
-        {
+            StatusText.Text = "Temizleniyor…";
+            DetailText.Text = "Kullanımdaki veya erişilemeyen öğeler atlanır.";
+            WorkProgress.IsIndeterminate = false;
+            WorkProgress.Minimum = 0;
+            WorkProgress.Maximum = Math.Max(1, scan.Files.Count + scan.Directories.Count);
+            WorkProgress.Value = 0;
+            var progress = new Progress<int>(value => WorkProgress.Value = value);
             var result = await Task.Run(() => CleanupService.Clean(scan, _operation!.Token, progress));
+            result.Cancelled |= _operation!.IsCancellationRequested;
             var recentCleared = false;
             if (!result.Cancelled && scan.Areas.HasFlag(CleanupArea.Recent))
             {
@@ -119,16 +87,19 @@ public partial class MainWindow : Window
             DetailText.Text = $"{result.DeletedFiles:N0} dosya silindi · {FormatBytes(result.FreedBytes)} alan açıldı · {result.Skipped:N0} öğe atlandı" +
                               (recentCleared ? " · Son açılanlar sıfırlandı" : "");
             DetailText.ToolTip = result.Errors.Count > 0 ? string.Join(Environment.NewLine, result.Errors.Take(5)) : null;
-            _scan = null;
             SizeLabel.Text = "AÇILAN ALAN";
             FileLabel.Text = "SİLİNEN DOSYA";
             SizeValue.Text = FormatBytes(result.FreedBytes);
             FileValue.Text = result.DeletedFiles.ToString("N0", CultureInfo.GetCultureInfo("tr-TR"));
             SkippedValue.Text = result.Skipped.ToString("N0", CultureInfo.GetCultureInfo("tr-TR"));
         }
+        catch (OperationCanceledException)
+        {
+            StatusText.Text = "Temizlik iptal edildi";
+            DetailText.Text = "İstersen yeniden başlatabilirsin.";
+        }
         catch (Exception ex)
         {
-            _scan = null;
             StatusText.Text = "Temizlik durdu";
             DetailText.Text = ex.Message;
         }
@@ -166,8 +137,7 @@ public partial class MainWindow : Window
             WorkProgress.Visibility = Visibility.Collapsed;
             CancelButton.Visibility = Visibility.Collapsed;
         }
-        ScanButton.IsEnabled = !busy;
-        CleanButton.IsEnabled = !busy && _scan is not null;
+        CleanButton.IsEnabled = !busy && SelectedAreas() != CleanupArea.None;
         UserTempToggle.IsEnabled = WindowsTempToggle.IsEnabled = RecentToggle.IsEnabled = PrefetchToggle.IsEnabled = !busy;
     }
 

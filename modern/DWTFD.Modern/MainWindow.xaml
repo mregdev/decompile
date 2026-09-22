@@ -88,10 +88,18 @@
         <Grid.RowDefinitions><RowDefinition Height="38"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <Border Grid.Row="0" Background="#0B1020" BorderBrush="#22324A" BorderThickness="0,0,0,1">
             <Grid>
-                <Image Source="app.png" Width="20" Height="20" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="13,0,0,0" IsHitTestVisible="False"/>
+                <Image Source="app.png" Width="24" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="11,0,0,0" IsHitTestVisible="False"/>
                 <Button Content="×" HorizontalAlignment="Right" Style="{StaticResource CloseButton}" shell:WindowChrome.IsHitTestVisibleInChrome="True" Click="CloseButton_Click" AutomationProperties.Name="Kapat"/>
             </Grid>
         </Border>
+        <Grid Grid.Row="1" Width="21" Height="21" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,27,11" Opacity="0.26" IsHitTestVisible="False">
+            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="2"/><ColumnDefinition/></Grid.ColumnDefinitions>
+            <Grid.RowDefinitions><RowDefinition/><RowDefinition Height="2"/><RowDefinition/></Grid.RowDefinitions>
+            <Rectangle Grid.Row="0" Grid.Column="0" Fill="#62E4D0"/>
+            <Rectangle Grid.Row="0" Grid.Column="2" Fill="#62E4D0"/>
+            <Rectangle Grid.Row="2" Grid.Column="0" Fill="#62E4D0"/>
+            <Rectangle Grid.Row="2" Grid.Column="2" Fill="#62E4D0"/>
+        </Grid>
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Margin="22,12,22,10">
             <UniformGrid Columns="3" Margin="0,0,0,12">
@@ -112,7 +120,7 @@
             <Border Background="{StaticResource Card}" CornerRadius="17" Padding="22,14" Margin="0,0,0,12">
                 <StackPanel>
                     <TextBlock Text="Temizlenecek alanlar" FontSize="18" FontWeight="SemiBold"/>
-                    <TextBlock Text="Seçimini değiştirdiğinde yeniden tarama yapılır." Foreground="{StaticResource Muted}" FontSize="12" Margin="0,3,0,17"/>
+                    <TextBlock Text="Seçilen alanlar temizlemeden önce taranır." Foreground="{StaticResource Muted}" FontSize="12" Margin="0,3,0,17"/>
                     <Grid Margin="0,0,0,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel><TextBlock Text="Kullanıcı geçici dosyaları" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="Hesabının Temp klasöründeki dosyalar" Foreground="{StaticResource Muted}" FontSize="12" Margin="0,2,0,0"/></StackPanel>
@@ -147,12 +155,11 @@
                     <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock x:Name="StatusText" Text="Hazır" FontSize="15" FontWeight="SemiBold"/>
-                            <TextBlock x:Name="DetailText" Text="Başlamak için alanları seçip tarama yap." Foreground="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,3,16,0"/>
+                            <TextBlock x:Name="DetailText" Text="Başlamak için Temizle'ye bas." Foreground="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,3,16,0"/>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                             <Button x:Name="CancelButton" Content="İptal" Style="{StaticResource QuietButton}" Visibility="Collapsed" Click="CancelButton_Click" Margin="0,0,8,0"/>
-                            <Button x:Name="ScanButton" Content="Tara" Style="{StaticResource QuietButton}" Click="ScanButton_Click" Margin="0,0,8,0"/>
-                            <Button x:Name="CleanButton" Content="Temizle" Style="{StaticResource ActionButton}" IsEnabled="False" Click="CleanButton_Click"/>
+                            <Button x:Name="CleanButton" Content="Temizle" Style="{StaticResource ActionButton}" Click="CleanButton_Click"/>
                         </StackPanel>
                     </Grid>
                     <ProgressBar x:Name="WorkProgress" Height="5" Background="#2A3954" Foreground="#62E4D0" BorderThickness="0" Margin="0,15,0,0" Visibility="Collapsed"/>

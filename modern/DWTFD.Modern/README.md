@@ -7,10 +7,11 @@ Pencere 700 × 590 piksel sabittir. Başlıkta yalnızca kapatma düğmesi ve sa
 ## Kullanım
 
 1. Temizlenecek alanları seçin.
-2. **Tara** ile dosya sayısını ve tahmini boyutu görün.
-3. **Temizle** ile onay verip işlemi başlatın.
+2. **Temizle** düğmesine basın. Uygulama önce tarar, dosya sayısını ve tahmini boyutu 1,5 saniye gösterir, ardından dosyaları temizler.
 
-Dört alan da açılışta seçilidir. **Son açılanlar listesi** Windows kabuk geçmişini sıfırlar; gerçek belgeleri silmez. **Prefetch** önbelleğini boşaltmak uygulama açılışını geçici olarak yavaşlatabilir; istemiyorsanız taramadan önce bu seçeneği kapatın.
+Ek onay penceresi açılmaz. Bu 1,5 saniyelik aralıkta **İptal** düğmesiyle işlemi durdurabilirsiniz.
+
+Dört alan da açılışta seçilidir. **Son açılanlar listesi** Windows kabuk geçmişini sıfırlar; gerçek belgeleri silmez. **Prefetch** önbelleğini boşaltmak uygulama açılışını geçici olarak yavaşlatabilir; istemiyorsanız Temizle'ye basmadan önce bu seçeneği kapatın.
 
 Temizlik yönetici yetkisi istemeden çalışır. Erişilemeyen veya kullanımdaki dosyalar atlanır. Klasör kökleri ve sembolik bağlantılar silinmez. İşlemin ilerleyişi ve atlanan öğeler arayüzde gösterilir.
 
