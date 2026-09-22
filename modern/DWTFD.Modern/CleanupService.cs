@@ -13,12 +13,24 @@ public enum CleanupArea
     Prefetch = 8
 }
 
-public sealed record ScannedFile(string Path, string Root, long Bytes);
-public sealed record ScannedDirectory(string Path, string Root);
+public sealed class ScannedFile
+{
+    public ScannedFile(string path, string root, long bytes) { Path = path; Root = root; Bytes = bytes; }
+    public string Path { get; }
+    public string Root { get; }
+    public long Bytes { get; }
+}
+
+public sealed class ScannedDirectory
+{
+    public ScannedDirectory(string path, string root) { Path = path; Root = root; }
+    public string Path { get; }
+    public string Root { get; }
+}
 
 public sealed class ScanResult
 {
-    public required CleanupArea Areas { get; init; }
+    public CleanupArea Areas { get; set; }
     public List<ScannedFile> Files { get; } = [];
     public List<ScannedDirectory> Directories { get; } = [];
     public List<string> Errors { get; } = [];
@@ -53,7 +65,7 @@ public static class CleanupService
     public static ScanResult ScanRoots(IEnumerable<string> paths, CleanupArea areas, CancellationToken cancellationToken)
     {
         var result = new ScanResult { Areas = areas };
-        var roots = paths.Select(path => Path.TrimEndingDirectorySeparator(Path.GetFullPath(path)))
+        var roots = paths.Select(path => NormalizeRoot(Path.GetFullPath(path)))
             .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(path => path.Length).ToList();
         var processed = new List<string>();
 
@@ -172,6 +184,14 @@ public static class CleanupService
             if (string.Equals(current, root, StringComparison.OrdinalIgnoreCase)) return true;
         }
         return false;
+    }
+
+    private static string NormalizeRoot(string path)
+    {
+        var root = Path.GetPathRoot(path) ?? path;
+        return path.Length > root.Length
+            ? path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            : path;
     }
 
     private static bool IsFileSystemError(Exception exception) =>

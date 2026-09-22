@@ -1,6 +1,6 @@
 # DWTFD
 
-Üniversite döneminde yazılan [orijinal DWTFD](https://github.com/mregdev/decompile) uygulamasının güncel Windows sürümü. Kaynak kod, WPF ve .NET 10 ile yeniden yazıldı.
+Üniversite döneminde yazılan [orijinal DWTFD](https://github.com/mregdev/decompile) uygulamasının güncel Windows sürümü. Kaynak kod WPF ile yeniden yazıldı. Dağıtım dosyası yaklaşık 360 KB'tır; .NET Framework 4.8 kullandığı için çalışma ortamı EXE içine eklenmez.
 
 Pencere 700 × 590 piksel sabittir. Başlıkta yalnızca kapatma düğmesi ve saydam arka planlı çöp kutusu simgesi bulunur.
 
@@ -17,14 +17,10 @@ Temizlik yönetici yetkisi istemeden çalışır. Erişilemeyen veya kullanımda
 
 ## Derleme
 
-Windows üzerinde .NET 10 SDK ile:
+Windows üzerinde .NET 10 SDK ve .NET Framework 4.8 hedefleme paketiyle:
 
 ```powershell
 dotnet build DWTFD.Modern.csproj -c Release
 ```
 
-Tek dosyalık, .NET kurulumu gerektirmeyen paket için:
-
-```powershell
-dotnet publish DWTFD.Modern.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
-```
+Dağıtılacak tek dosya `bin/Release/net48/DWTFD.exe` konumundadır. Windows 11 ve güncel Windows 10 sürümlerinde .NET Framework 4.8 sistemle birlikte gelir. Daha eski sistemlerde 4.8 kurulumu gerekebilir.
