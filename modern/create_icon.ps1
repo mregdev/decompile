@@ -1,35 +1,58 @@
+# Build a Windows icon from the supplied artwork. Small frames use a prefiltered
+# thumbnail so the fine mesh does not shimmer at taskbar sizes.
 Add-Type -AssemblyName System.Drawing
 
-$large = [System.Drawing.Bitmap]::new(256, 256, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
-$graphics = [System.Drawing.Graphics]::FromImage($large)
-$graphics.Clear([System.Drawing.Color]::Transparent)
-$graphics.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
-$teal = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(98, 228, 208))
-# Windows'un Segoe Fluent Icons yazı tipindeki Delete simgesi.
-$font = [System.Drawing.Font]::new('Segoe Fluent Icons', 198, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
-$alignment = [System.Drawing.StringFormat]::new()
-$alignment.Alignment = [System.Drawing.StringAlignment]::Center
-$alignment.LineAlignment = [System.Drawing.StringAlignment]::Center
-$graphics.DrawString([char]0xE74D, $font, $teal, [System.Drawing.RectangleF]::new(0, -2, 256, 256), $alignment)
-
 $assetDirectory = Join-Path $PSScriptRoot 'DWTFD.Modern'
-$large.Save((Join-Path $assetDirectory 'app.png'), [System.Drawing.Imaging.ImageFormat]::Png)
+$pngPath = Join-Path $assetDirectory 'app.png'
+$smallPngPath = Join-Path $assetDirectory 'app-small.png'
+$mediumPngPath = Join-Path $assetDirectory 'app-medium.png'
+$icoPath = Join-Path $assetDirectory 'app.ico'
+$source = [System.Drawing.Bitmap]::new($pngPath)
+$smallSource = [System.Drawing.Bitmap]::new($smallPngPath)
+$mediumSource = [System.Drawing.Bitmap]::new($mediumPngPath)
+$frames = @()
 
-$small = [System.Drawing.Bitmap]::new(64, 64, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
-$smallGraphics = [System.Drawing.Graphics]::FromImage($small)
-$smallGraphics.Clear([System.Drawing.Color]::Transparent)
-$smallGraphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-$smallGraphics.DrawImage($large, 0, 0, 64, 64)
-$icon = [System.Drawing.Icon]::FromHandle($small.GetHicon())
-$stream = [System.IO.File]::Create((Join-Path $assetDirectory 'app.ico'))
-$icon.Save($stream)
+foreach ($size in @(16, 24, 32, 48, 64, 128, 256)) {
+    $bitmap = [System.Drawing.Bitmap]::new($size, $size, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+    $graphics.Clear([System.Drawing.Color]::Transparent)
+    $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+    if ($size -le 32) {
+        $graphics.DrawImage($smallSource, 0, 0, $size, $size)
+    } elseif ($size -le 64) {
+        $graphics.DrawImage($mediumSource, 0, 0, $size, $size)
+    } else {
+        $graphics.DrawImage($source, 0, 0, $size, $size)
+    }
+    $memory = [System.IO.MemoryStream]::new()
+    $bitmap.Save($memory, [System.Drawing.Imaging.ImageFormat]::Png)
+    $frames += [pscustomobject]@{ Size = $size; Data = $memory.ToArray() }
+    $memory.Dispose()
+    $graphics.Dispose()
+    $bitmap.Dispose()
+}
+$source.Dispose()
+$smallSource.Dispose()
+$mediumSource.Dispose()
 
-$stream.Dispose()
-$icon.Dispose()
-$smallGraphics.Dispose()
-$small.Dispose()
-$alignment.Dispose()
-$font.Dispose()
-$teal.Dispose()
-$graphics.Dispose()
-$large.Dispose()
+$stream = [System.IO.File]::Create($icoPath)
+$writer = [System.IO.BinaryWriter]::new($stream)
+$writer.Write([uint16]0)
+$writer.Write([uint16]1)
+$writer.Write([uint16]$frames.Count)
+$offset = 6 + 16 * $frames.Count
+foreach ($frame in $frames) {
+    $dimension = [byte]($frame.Size % 256)
+    $writer.Write($dimension)
+    $writer.Write($dimension)
+    $writer.Write([byte]0)
+    $writer.Write([byte]0)
+    $writer.Write([uint16]1)
+    $writer.Write([uint16]32)
+    $writer.Write([uint32]$frame.Data.Length)
+    $writer.Write([uint32]$offset)
+    $offset += $frame.Data.Length
+}
+foreach ($frame in $frames) { $writer.Write([byte[]]$frame.Data) }
+$writer.Dispose()

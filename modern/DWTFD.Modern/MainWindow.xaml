@@ -88,7 +88,7 @@
         <Grid.RowDefinitions><RowDefinition Height="38"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <Border Grid.Row="0" Background="#0B1020" BorderBrush="#22324A" BorderThickness="0,0,0,1">
             <Grid>
-                <Image Source="app.png" Width="24" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="11,0,0,0" IsHitTestVisible="False"/>
+                <Image Source="app-small.png" Width="32" Height="32" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5,0,0,0" RenderOptions.BitmapScalingMode="Fant" IsHitTestVisible="False"/>
                 <Button Content="×" HorizontalAlignment="Right" Style="{StaticResource CloseButton}" shell:WindowChrome.IsHitTestVisibleInChrome="True" Click="CloseButton_Click" AutomationProperties.Name="Kapat"/>
             </Grid>
         </Border>
